@@ -7,6 +7,12 @@ export default {
     }
   },
 
+  watch: {
+    oldSingleTime() {
+      this.$emit('input', this.oldSingleTime)
+    },
+  },
+
   computed: {
     singleTimeIndex() {
       return this.isValidSingleTimeData(this.singleTime) ? this.singleTime : this.oldSingleTime

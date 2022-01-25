@@ -76,7 +76,7 @@ export default{
 export default{
   data() {
     return {
-      time2: ['0:00', '24:00']
+      time2: ['00:00', '23:00']
     }
   },
   methods: {
