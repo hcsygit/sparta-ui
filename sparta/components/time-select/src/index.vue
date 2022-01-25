@@ -8,15 +8,15 @@
     <div v-if="!isRangeType">
       <div class="sp-time-select__single">
         <sp-input
-          v-model="time"
+          v-model="singleTime"
           :disabled="disabled"
           :placeholder="placeholder"
           prefix-icon="sp-icon-clock"
           :clearable="clearable"
-          @focus="handleInputFocus"
-          @blur="handleTimeInputBlur"
-          @input="handleTimeInput"
-          @clear="handleClear"
+          @focus="handleSingleFocus"
+          @blur="handleSingleBlur"
+          @input="handleSingleInput"
+          @clear="handleSingleClear"
         />
       </div>
       <sp-time-picker-dropdown
@@ -26,14 +26,14 @@
       >
         <transition name="sp-zoom-in-top">
           <div v-show="visible" class="sp-time-picker-dropdown__box">
-            <sp-time-picker-pane :index="getTimeIndexForSingle(inputTimeIndex)">
+            <sp-time-picker-pane :index="getTimeIndexForSingle(singleTimeIndex)">
               <sp-time-picker-option
                 v-for="(item, index) in timeList"
                 :key="item"
-                :disabled="_disableTime(item)"
+                :disabled="_disableSingleTime(item)"
                 :text="item"
                 :index="index"
-                @click="handleTimeClick(item)"
+                @click="handleSinglePaneClick(item)"
               />
             </sp-time-picker-pane>
           </div>
@@ -159,14 +159,19 @@ import SpTimePickerDropdown from 'sparta/components/time-picker/src/dropdown'
 import SpTimePickerPane from 'sparta/components/time-picker/src/pane'
 import SpTimePickerOption from 'sparta/components/time-picker/src/option'
 import Emitter from 'sparta/common/js/mixins/emitter'
+
+import Single from './single'
 export default {
   name: 'SpTimeSelect',
+
   components: {
     'sp-time-picker-dropdown': SpTimePickerDropdown,
     'sp-time-picker-pane': SpTimePickerPane,
     'sp-time-picker-option': SpTimePickerOption
   },
-  mixins: [Emitter],
+
+  mixins: [Emitter, Single],
+
   props: {
     value: {},
     type: {
@@ -222,9 +227,6 @@ export default {
   },
   data() {
     return {
-      visible: false,
-      time: '',
-      oldTime: '',
       visibleTimeRange: false, // 控制时间范围选择面板是否显示
       timeStart: '',
       oldTimeStart: '',
@@ -267,12 +269,11 @@ export default {
     availableTimeList() {
       return this.timeList.filter(item => !this._compareTimeWithMinAndMax(item))
     },
-    inputTimeIndex() {
-      return this.isValidTimeData(this.time) ? this.time : this.oldTime
-    },
+
     inputTimeStartIndex() {
       return this.isValidTimeStartData(this.paneTimeStart) ? this.paneTimeStart : this.oldTimeStart
     },
+
     inputTimeEndIndex() {
       return this.isValidTimeEndData(this.timeEnd) ? this.timeEnd : this.oldTimeEnd
     }
@@ -297,15 +298,12 @@ export default {
             this.handleRangeClear()
           }
         } else {
-          if(this.isValidTimeData(newVal) || !newVal) {
-            this.time = newVal || ''
-            this.oldTime = this.time
-          }
+          this._initSingleTime(newVal)
         }
       }
     },
-    oldTime() {
-      this.$emit('input', this.oldTime)
+    oldSingleTime() {
+      this.$emit('input', this.oldSingleTime)
     },
     oldTimeEnd() {
       this._setRangeValChange()
@@ -318,9 +316,6 @@ export default {
     document.removeEventListener('click', this.handleOtherAreaClick)
   },
   methods: {
-    _disableTime(item) {
-      return this.disabledTime(item) || this._compareTimeWithMinAndMax(item)
-    },
     _disableTimeStart(item) {
       return this.disabledTimeStart(item) || this._compareTimeWithMinAndMax(item)
     },
@@ -331,53 +326,7 @@ export default {
     _compareTimeWithMinAndMax(item) {
       return compareTime(item, this.minTime || '-1:-1') <= 0 || compareTime(item, this.maxTime || '100:100') >= 0
     },
-    /**
-     * 单个选择，时间选择框聚焦显示下拉面板
-     */
-    handleInputFocus() {
-      if (!this.disabled) {
-        this.visible = true
-        // 为了每次弹出dropdown，都会根据处的环境做适应
-        this.broadcast('SpTimePickerDropdown', 'updatePopper')
-      }
-    },
-    /**
-     * 单个选择，清除不符合格式的时间值
-     */
-    handleTimeInputBlur() {
-      if(!this.isValidTimeData(this.time)) {
-        this.time = this.oldTime
-      }
-    },
-    /**
-     * 单个选择，保存旧值，方便当用户输入不符合规范的值时恢复之前的值
-     */
-    handleTimeClick(time) {
-      this.time = time
-      this.oldTime = time
-      this._hideSingleDropdown()
-    },
-    /**
-     * 单个选择, 用户主动输入监听
-     */
-    handleTimeInput() {
-      if(this.isValidTimeData(this.time)) {
-        this.oldTime = this.time
-      }
-    },
-    /**
-     * 单个选择, 清空时间
-     */
-    handleClear() {
-      this.time = ''
-      this.oldTime = ''
-    },
-    /**
-     * 单个选择, 验证时间值是否是符合格式的
-     */
-    isValidTimeData(val) {
-      return this.availableTimeList.includes(val) && !this._disableTime(val)
-    },
+    
 
     /**
      * 范围选择，范围值开始时间点击
@@ -491,7 +440,7 @@ export default {
       return result
     },
     /**
-     * 清空时间范围的数据
+     * 范围选择， 清空时间范围的数据
      */
     handleRangeClear() {
       this.timeStart = ''
@@ -510,7 +459,7 @@ export default {
      * 单个选择，点亮选择的时间值
      */
     getTimeIndexForSingle(val) {
-      if(val && this._disableTime(val)) {
+      if(val && this._disableSingleTime(val)) {
         return -1
       }
       return this.getTimeIndex(val)
@@ -531,12 +480,7 @@ export default {
       const rangeVal = !this.oldTimeStart && !this.oldTimeEnd ? [] : [this.oldTimeStart, this.oldTimeEnd]
       this.dispatch('SpFormItem', type === 'blur' ? 'sp.form.blur' : 'sp.form.change', rangeVal)
     },
-    /**
-     * 单个选择，重置时间选择状态
-     */
-    _hideSingleDropdown() {
-      this.visible = false
-    },
+
     /**
      * 范围选择，重置时间范围选择状态
      */
