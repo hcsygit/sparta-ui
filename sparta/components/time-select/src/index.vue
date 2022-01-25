@@ -445,7 +445,11 @@ export default {
     },
 
     _disableRangeTimeStart(item) {
-      return this.disabledTimeStart(item) || this._compareTimeWithMinAndMax(item)
+      const _result = this.disabledTimeStart(item) || this._compareTimeWithMinAndMax(item)
+      const _rangeTimeEnd = this.paneRangeVal[1]
+      if(_rangeTimeEnd) {
+        return _result || compareTime(item, _rangeTimeEnd) >= 0
+      }
     },
 
     _disableRangeTimeEnd(item) {
