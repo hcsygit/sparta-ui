@@ -233,7 +233,8 @@ export default {
       rangeTimeEnd: '',
       oldRangeTimeEnd: '',
       isTimeSelectFocus: false,
-      paneRangeVal: []
+      paneRangeVal: [],
+      isNeedClear: false
     }
   },
   computed: {
@@ -283,13 +284,25 @@ export default {
       handler(newVal) {
         if(this.isRangeType) {
           if(Array.isArray(newVal)) {
-            if(this.isValidRangeTimeStartData(newVal[0]) || !newVal[0]) {
+            this.isNeedClear = false
+
+            if(!newVal[0]|| this.isValidRangeTimeStartData(newVal[0])) {
               this.rangeTimeStart = newVal[0] || ''
               this.oldRangeTimeStart = this.rangeTimeStart
+            } else {
+              this.isNeedClear = true
             }
-            if(this.isValidRangeTimeEndData(newVal[1]) || !newVal[1]) {
+
+            if(!newVal[1] ||this.isValidRangeTimeEndData(newVal[1])) {
               this.rangeTimeEnd = newVal[1] || ''
               this.oldRangeTimeEnd = this.rangeTimeEnd
+            } else {
+              this.isNeedClear = true
+            }
+
+            if(this.isNeedClear) {
+              this.handleRangeClear()
+              this._dispatchRangeTimeValidate('blur')
             }
           } else {
             this.handleRangeClear()
@@ -392,13 +405,27 @@ export default {
     * 范围选择，验证开始时间值是否是符合格式的
     */
     isValidRangeTimeStartData(val) {
-      return this.availableTimeList.includes(val) && !this._disableRangeTimeStart(val)
+      const includesResult = this.availableTimeList.includes(val)
+      if(!includesResult) return includesResult
+      let _disabledResult = this.disabledTimeStart(val) || this._compareTimeWithMinAndMax(val)
+      if(this.oldRangeTimeEnd) {
+        _disabledResult = _disabledResult || compareTime(val, this.oldRangeTimeEnd) >= 0
+      }
+      return includesResult && !_disabledResult
     },
     /**
     * 范围选择，验证结束时间值是否是符合格式的
     */
     isValidRangeTimeEndData(val) {
-      const result = this.availableTimeList.includes(val) && !this._disableRangeTimeEnd(val)
+      const includesResult = this.availableTimeList.includes(val)
+      if(!includesResult) return includesResult
+
+      let _disabledResult = this.disabledTimeEnd(val) || this._compareTimeWithMinAndMax(val)
+      if(this.oldRangeTimeStart) {
+        _disabledResult = _disabledResult || compareTime(val, this.oldRangeTimeStart) <= 0
+      }
+
+      const result = includesResult && !_disabledResult
       if(val && this.rangeTimeStart) {
         return result && compareTime(val, this.oldRangeTimeStart) > 0
       }
@@ -446,17 +473,15 @@ export default {
 
     _disableRangeTimeStart(item) {
       const _result = this.disabledTimeStart(item) || this._compareTimeWithMinAndMax(item)
-      const _rangeTimeEnd = this.paneRangeVal[1]
-      if(_rangeTimeEnd) {
-        return _result || compareTime(item, _rangeTimeEnd) >= 0
+      if(this.paneRangeVal[1]) {
+        return _result || compareTime(item, this.paneRangeVal[1]) >= 0
       }
     },
 
     _disableRangeTimeEnd(item) {
       const _result = this.disabledTimeEnd(item) || this._compareTimeWithMinAndMax(item)
-      const _rangeTimeStar = this.paneRangeVal[0] || this.oldRangeTimeStart
-      if(_rangeTimeStar) {
-        return _result || compareTime(item, _rangeTimeStar) <= 0
+      if(this.paneRangeVal[0] ) {
+        return _result || compareTime(item, this.paneRangeVal[0] ) <= 0
       }
       return _result
     },
