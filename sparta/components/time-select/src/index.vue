@@ -52,25 +52,25 @@
       >
         <div class="sp-time-select__range-start">
           <sp-input
-            v-model="timeStart"
+            v-model="rangeTimeStart"
             :disabled="disabled"
             :validate-event="false"
             :placeholder="startPlaceholder"
             prefix-icon="sp-icon-clock"
-            @blur="handleTimeStartInputBlur"
-            @input="handleTimeStartInput"
+            @blur="handleRangeTimeStartBlur"
+            @input="handleRangeTimeStartInput"
           />
         </div>
         <div class="sp-time-select__range-end">
           <sp-input
-            v-model="timeEnd"
+            v-model="rangeTimeEnd"
             :disabled="disabled"
             :validate-event="false"
             :placeholder="endPlaceholder"
             :clearable="clearable"
             @clear="handleRangeClear"
-            @blur="handleTimeEndInputBlur"
-            @input="handleTimeEndInput"
+            @blur="handleRangeTimeEndBlur"
+            @input="handleRangeTimeEndInput"
           />
         </div>
       </div>
@@ -85,20 +85,20 @@
               <sp-time-picker-option
                 v-for="(item, index) in timeList"
                 :key="item"
-                :disabled="_disableTimeStart(item)"
+                :disabled="_disableRangeTimeStart(item)"
                 :text="item"
                 :index="index"
-                @click="handleTimeStartClick(item)"
+                @click="handleRangeStartPaneClick(item)"
               />
             </sp-time-picker-pane>
             <sp-time-picker-pane :index="timeEndIndexForRange">
               <sp-time-picker-option
                 v-for="(item, index) in timeList"
                 :key="item"
-                :disabled="_disableTimeEnd(item)"
+                :disabled="_disableRangeTimeEnd(item)"
                 :text="item"
                 :index="index"
-                @click="handleTimeEndClick(item)"
+                @click="handleRangeEndPaneClick(item)"
               />
             </sp-time-picker-pane>
           </div>
@@ -228,11 +228,11 @@ export default {
   data() {
     return {
       visibleTimeRange: false, // 控制时间范围选择面板是否显示
-      timeStart: '',
-      oldTimeStart: '',
+      rangeTimeStart: '',
+      oldRangeTimeStart: '',
       paneTimeStart: '',
-      timeEnd: '',
-      oldTimeEnd: '',
+      rangeTimeEnd: '',
+      oldRangeTimeEnd: '',
       isTimeSelectFocus: false,
       timeEndIndexForRange: -1,
     }
@@ -271,11 +271,11 @@ export default {
     },
 
     inputTimeStartIndex() {
-      return this.isValidTimeStartData(this.paneTimeStart) ? this.paneTimeStart : this.oldTimeStart
+      return this.isValidRangeTimeStartData(this.paneTimeStart) ? this.paneTimeStart : this.oldRangeTimeStart
     },
 
     inputTimeEndIndex() {
-      return this.isValidTimeEndData(this.timeEnd) ? this.timeEnd : this.oldTimeEnd
+      return this.isValidRangeTimeEndData(this.rangeTimeEnd) ? this.rangeTimeEnd : this.oldRangeTimeEnd
     }
   },
   watch: {
@@ -284,15 +284,15 @@ export default {
       handler(newVal) {
         if(this.isRangeType) {
           if(Array.isArray(newVal)) {
-            if(this.isValidTimeStartData(newVal[0]) || !newVal[0]) {
-              this.timeStart = newVal[0] || ''
-              this.paneTimeStart = this.timeStart
-              this.oldTimeStart = this.timeStart
+            if(this.isValidRangeTimeStartData(newVal[0]) || !newVal[0]) {
+              this.rangeTimeStart = newVal[0] || ''
+              this.paneTimeStart = this.rangeTimeStart
+              this.oldRangeTimeStart = this.rangeTimeStart
             }
-            if(this.isValidTimeEndData(newVal[1]) || !newVal[1]) {
-              this.timeEnd = newVal[1] || ''
-              this.oldTimeEnd = this.timeEnd
-              this.timeEndIndexForRange = this.getTimeIndex(this.timeEnd)
+            if(this.isValidRangeTimeEndData(newVal[1]) || !newVal[1]) {
+              this.rangeTimeEnd = newVal[1] || ''
+              this.oldRangeTimeEnd = this.rangeTimeEnd
+              this.timeEndIndexForRange = this.getTimeIndex(this.rangeTimeEnd)
             }
           } else {
             this.handleRangeClear()
@@ -305,7 +305,7 @@ export default {
     oldSingleTime() {
       this.$emit('input', this.oldSingleTime)
     },
-    oldTimeEnd() {
+    oldRangeTimeEnd() {
       this._setRangeValChange()
     }
   },
@@ -316,10 +316,10 @@ export default {
     document.removeEventListener('click', this.handleOtherAreaClick)
   },
   methods: {
-    _disableTimeStart(item) {
+    _disableRangeTimeStart(item) {
       return this.disabledTimeStart(item) || this._compareTimeWithMinAndMax(item)
     },
-    _disableTimeEnd(item) {
+    _disableRangeTimeEnd(item) {
       if(!this.paneTimeStart || !this.availableTimeList.includes(this.paneTimeStart)) return true
       return this.disabledTimeEnd(item) || compareTime(item, this.paneTimeStart) <= 0 || this._compareTimeWithMinAndMax(item)
     },
@@ -331,27 +331,27 @@ export default {
     /**
      * 范围选择，范围值开始时间点击
      */
-    handleTimeStartClick(timeStart) {
-      this.paneTimeStart = timeStart
+    handleRangeStartPaneClick(rangeTimeStart) {
+      this.paneTimeStart = rangeTimeStart
 
       this.timeEndIndexForRange = -1
     },
     /**
      * 范围选择，范围值结束时间点击
      */
-    handleTimeEndClick(timeEnd) {
+    handleRangeEndPaneClick(rangeTimeEnd) {
       // 只有当结束时间选择的时候才算一次完整的选择，这个时候给开始值赋值
-      this.timeStart = this.paneTimeStart
-      this.oldTimeStart = this.paneTimeStart
+      this.rangeTimeStart = this.paneTimeStart
+      this.oldRangeTimeStart = this.paneTimeStart
 
-      // 当用户只修改了前面的值的时候，watcher oldTimeEnd 不会触发值更新，需要手动触发一下
-      if(this.oldTimeEnd === timeEnd) {
-        this.timeEnd = timeEnd
-        this.oldTimeEnd = timeEnd
+      // 当用户只修改了前面的值的时候，watcher oldRangeTimeEnd 不会触发值更新，需要手动触发一下
+      if(this.oldRangeTimeEnd === rangeTimeEnd) {
+        this.rangeTimeEnd = rangeTimeEnd
+        this.oldRangeTimeEnd = rangeTimeEnd
         this._setRangeValChange()
       } else {
-        this.timeEnd = timeEnd
-        this.oldTimeEnd = timeEnd
+        this.rangeTimeEnd = rangeTimeEnd
+        this.oldRangeTimeEnd = rangeTimeEnd
       }
 
       this._resetRangeRelative()
@@ -371,11 +371,11 @@ export default {
     /**
      * 范围选择，范围开始时间输入监听
      */
-    handleTimeStartInput() {
-      if(this.isValidTimeStartData(this.timeStart)) {
-        if(this.oldTimeEnd && compareTime(this.timeStart, this.oldTimeEnd) >= 0 ) return
-        this.oldTimeStart = this.timeStart
-        this.paneTimeStart = this.timeStart
+    handleRangeTimeStartInput() {
+      if(this.isValidRangeTimeStartData(this.rangeTimeStart)) {
+        if(this.oldRangeTimeEnd && compareTime(this.rangeTimeStart, this.oldRangeTimeEnd) >= 0 ) return
+        this.oldRangeTimeStart = this.rangeTimeStart
+        this.paneTimeStart = this.rangeTimeStart
         
         this._setRangeValChange()
       }
@@ -383,9 +383,9 @@ export default {
     /**
      * 范围选择，结束时间输入监听
      */
-    handleTimeEndInput() {
-      if(this.isValidTimeEndData(this.timeEnd)) {
-        this.oldTimeEnd = this.timeEnd
+    handleRangeTimeEndInput() {
+      if(this.isValidRangeTimeEndData(this.rangeTimeEnd)) {
+        this.oldRangeTimeEnd = this.rangeTimeEnd
       }
     },
     /**
@@ -403,39 +403,39 @@ export default {
     /**
     * 范围选择，清除不符合格式的时间范围开始值
     */
-    handleTimeStartInputBlur() {
-      if(this.isValidTimeStartData(this.timeStart)) {
-        if(this.oldTimeEnd && compareTime(this.timeStart, this.oldTimeEnd) >= 0 ) {
-          this.timeStart = this.oldTimeStart
+    handleRangeTimeStartBlur() {
+      if(this.isValidRangeTimeStartData(this.rangeTimeStart)) {
+        if(this.oldRangeTimeEnd && compareTime(this.rangeTimeStart, this.oldRangeTimeEnd) >= 0 ) {
+          this.rangeTimeStart = this.oldRangeTimeStart
           return
         }
-        this.oldTimeStart = this.timeStart
-        this.paneTimeStart = this.timeStart
+        this.oldRangeTimeStart = this.rangeTimeStart
+        this.paneTimeStart = this.rangeTimeStart
       } else {
-        this.timeStart = this.oldTimeStart
+        this.rangeTimeStart = this.oldRangeTimeStart
       }
     },
     /**
     * 范围选择，清除不符合格式的时间范围结束值
     */
-    handleTimeEndInputBlur() {
-      if(!this.isValidTimeEndData(this.timeEnd)) {
-        this.timeEnd = this.oldTimeEnd
+    handleRangeTimeEndBlur() {
+      if(!this.isValidRangeTimeEndData(this.rangeTimeEnd)) {
+        this.rangeTimeEnd = this.oldRangeTimeEnd
       }
     },
     /**
     * 范围选择，验证开始时间值是否是符合格式的
     */
-    isValidTimeStartData(val) {
-      return this.availableTimeList.includes(val) && !this._disableTimeStart(val)
+    isValidRangeTimeStartData(val) {
+      return this.availableTimeList.includes(val) && !this._disableRangeTimeStart(val)
     },
     /**
     * 范围选择，验证结束时间值是否是符合格式的
     */
-    isValidTimeEndData(val) {
-      const result = this.availableTimeList.includes(val) && !this._disableTimeEnd(val)
-      if(val && this.timeStart) {
-        return result && compareTime(val, this.oldTimeStart) > 0
+    isValidRangeTimeEndData(val) {
+      const result = this.availableTimeList.includes(val) && !this._disableRangeTimeEnd(val)
+      if(val && this.rangeTimeStart) {
+        return result && compareTime(val, this.oldRangeTimeStart) > 0
       }
       return result
     },
@@ -443,32 +443,25 @@ export default {
      * 范围选择， 清空时间范围的数据
      */
     handleRangeClear() {
-      this.timeStart = ''
-      this.timeEnd = ''
+      this.rangeTimeStart = ''
+      this.rangeTimeEnd = ''
       this.paneTimeStart = ''
-      this.oldTimeStart = ''
-      this.oldTimeEnd = ''
+      this.oldRangeTimeStart = ''
+      this.oldRangeTimeEnd = ''
     },
+    
     /**
      * 单个选择/范围选择，点亮选择的值
      */
     getTimeIndex(val) {
       return this.timeList.findIndex(item => item === val)
     },
-    /**
-     * 单个选择，点亮选择的时间值
-     */
-    getTimeIndexForSingle(val) {
-      if(val && this._disableSingleTime(val)) {
-        return -1
-      }
-      return this.getTimeIndex(val)
-    },
+   
     /**
      * 范围选择,点亮选择的时间开始值
      */
     getTimeStartIndexForRange(val) {
-      if(val && this._disableTimeStart(val)) {
+      if(val && this._disableRangeTimeStart(val)) {
         return -1
       }
       return this.getTimeIndex(val)
@@ -477,7 +470,7 @@ export default {
      * 范围，触发值校验
      */
     _dispatchRangeTimeValidate(type) {
-      const rangeVal = !this.oldTimeStart && !this.oldTimeEnd ? [] : [this.oldTimeStart, this.oldTimeEnd]
+      const rangeVal = !this.oldRangeTimeStart && !this.oldRangeTimeEnd ? [] : [this.oldRangeTimeStart, this.oldRangeTimeEnd]
       this.dispatch('SpFormItem', type === 'blur' ? 'sp.form.blur' : 'sp.form.change', rangeVal)
     },
 
@@ -488,7 +481,7 @@ export default {
       this.isTimeSelectFocus = false
       this.visibleTimeRange = false
       // 重置范围的临时值
-      this.paneTimeStart = this.oldTimeStart
+      this.paneTimeStart = this.oldRangeTimeStart
       this._dispatchRangeTimeValidate('blur')
 
       this.$nextTick(() => {
@@ -499,7 +492,7 @@ export default {
      * 范围选择，触发值更新
      */
     _setRangeValChange() {
-      const rangeVal = !this.oldTimeStart && !this.oldTimeEnd ? [] : [this.oldTimeStart, this.oldTimeEnd]
+      const rangeVal = !this.oldRangeTimeStart && !this.oldRangeTimeEnd ? [] : [this.oldRangeTimeStart, this.oldRangeTimeEnd]
       this.$emit('input', rangeVal)
       this._dispatchRangeTimeValidate('change')
     },

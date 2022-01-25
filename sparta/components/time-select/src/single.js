@@ -15,6 +15,15 @@ export default {
 
   methods: {
     /**
+     * 单个选择，点亮选择的时间值
+     */
+    getTimeIndexForSingle(val) {
+      if(val && this._disableSingleTime(val)) {
+        return -1
+      }
+      return this.getTimeIndex(val)
+    },
+    /**
      * 单个选择，时间选择框聚焦显示下拉面板
      */
     handleSingleFocus() {
