@@ -43,7 +43,7 @@
         class="sp-select__input-placeholder"
         @click="focusSelectInput"
       >
-        {{ placeholder }}
+        {{ oldInputText || placeholder }}
       </p>
       <div v-if="$slots.center" class="sp-select__center" @click="handleFocusSelectInput">
         <slot name="center"></slot>
@@ -185,7 +185,8 @@ export default {
       evOptionHoverIndex: -1,
       selected: [],
       selectInputBoxHeight: this.height - 2 + 'px',
-      currentValue: this.value
+      currentValue: this.value,
+      oldInputText: null
     }
   },
 
@@ -230,6 +231,12 @@ export default {
       } else {
         // 如果filterable开启了，用户输入的值在options中不存在的话，清空
         if (this.filterable) {
+          // 清空
+          if(this.oldInputText) {
+            this.inputText = this.oldInputText
+            this.oldInputText = null
+          }
+
           const hasLabel = this.spOptions.some(item => item.label === this.inputText)
           if (!hasLabel) {
             this.inputText = ''
@@ -241,6 +248,20 @@ export default {
       // 触发form的校验
       if (this.validateEvent && !val) {
         this.dispatch('SpFormItem', 'sp.form.change', [this.currentValue])
+      }
+    },
+    inputText(val) {
+      // 如果filterable开启，并且focus，根据用户输入过滤（搜索）相关的条目
+      if (this.filterable && this.isFocus) {
+        for (let i = 0, len = this.spOptions.length; i < len; i++) {
+          if (this.spOptions[i].label.indexOf(val) !== -1) {
+            this.spOptions[i].visible = true
+          } else {
+            this.spOptions[i].visible = false
+          }
+        }
+        // 为了每次弹出dropdown，都会根据处的环境做适应
+        this.broadcast('SpSelectDropdown', 'updatePopper')
       }
     },
     selected(val) {
@@ -332,6 +353,10 @@ export default {
      * 点击自身处理
      */
     handleSelfClick() {
+      if(this.filterable) {
+        this.oldInputText = this.inputText
+        this.inputText = ''
+      }
       if (!this.disableOperation) {
         // 原本可以在点击自身的时候切换下拉显示隐藏状态
         // 但是IE9上聚焦就会触发input事件
@@ -370,6 +395,11 @@ export default {
           this.spOptions[this.evOptionHoverIndex].selected = true
         }
       } else if (hoverItem) {
+
+        if(this.filterable) {
+          this.oldInputText = hoverItem.label
+        }
+
         this.$emit('input', hoverItem.value)
         this.inputText = hoverItem.label
         this.visible = false
@@ -384,17 +414,10 @@ export default {
       ) {
         this.visible = true
       }
-      // 如果filterable开启，并且focus，根据用户输入过滤（搜索）相关的条目
-      if (this.filterable && this.isFocus) {
-        for (let i = 0, len = this.spOptions.length; i < len; i++) {
-          if (this.spOptions[i].label.indexOf(this.inputText) !== -1) {
-            this.spOptions[i].visible = true
-          } else {
-            this.spOptions[i].visible = false
-          }
-        }
-        // 为了每次弹出dropdown，都会根据处的环境做适应
-        this.broadcast('SpSelectDropdown', 'updatePopper')
+
+      const hasLabel = this.spOptions.some(item => item.label === this.inputText)
+      if(hasLabel && this.filterable) {
+        this.oldInputText = this.inputText
       }
     },
 
