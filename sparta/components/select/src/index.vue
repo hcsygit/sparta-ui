@@ -248,20 +248,6 @@ export default {
         this.inputText = val.length ? ' ' : ''
       }
     },
-    inputText(val) {
-      // 如果filterable开启，并且focus，根据用户输入过滤（搜索）相关的条目
-      if (this.filterable && this.isFocus) {
-        for (let i = 0, len = this.spOptions.length; i < len; i++) {
-          if (this.spOptions[i].label.indexOf(val) !== -1) {
-            this.spOptions[i].visible = true
-          } else {
-            this.spOptions[i].visible = false
-          }
-        }
-        // 为了每次弹出dropdown，都会根据处的环境做适应
-        this.broadcast('SpSelectDropdown', 'updatePopper')
-      }
-    },
     spOptions() {
       this.setCurrentValue(this.value, true)
     }
@@ -397,6 +383,18 @@ export default {
         !this.readonly // 解决IE9上鬼畜bug
       ) {
         this.visible = true
+      }
+      // 如果filterable开启，并且focus，根据用户输入过滤（搜索）相关的条目
+      if (this.filterable && this.isFocus) {
+        for (let i = 0, len = this.spOptions.length; i < len; i++) {
+          if (this.spOptions[i].label.indexOf(this.inputText) !== -1) {
+            this.spOptions[i].visible = true
+          } else {
+            this.spOptions[i].visible = false
+          }
+        }
+        // 为了每次弹出dropdown，都会根据处的环境做适应
+        this.broadcast('SpSelectDropdown', 'updatePopper')
       }
     },
 
