@@ -57,17 +57,17 @@ describe('Select', () => {
 
     describe('默认无值-点选', () => {
       it('点击组件，显示所有下拉选项，全部没有点亮', async () => {
-        await clearSelect()
-        await selectClick()
+        await clearSelect(wrapper)
+        await selectClick(wrapper)
         expect(wrapper.find('.sp-select-dropdown').isVisible()).to.be.true
-        expect(getVisibleOptionsLength().length).to.be.equal(5) 
+        expect(getVisibleOptionsLength(wrapper).length).to.be.equal(5) 
         expect(wrapper.find('.sp-select-list .is--selected').exists()).to.be.false
        });
 
        it('点击组件，显示所有下拉选项，全部没有点亮，输入异常的值，显示无匹配数据', async () => {
-        await setSelectVal('mnh')
+        await setSelectVal(wrapper,'mnh')
         expect(wrapper.find('.sp-select-list-emptyText').isVisible()).to.be.true
-        await handelOtherClick() 
+        await handelOtherClick(wrapper) 
        });
 
        it('点击组件，显示所有下拉选项，全部没有点亮，输入异常的值，显示无匹配数据，再点击其他地方，清空异常的数据，并隐藏下拉框，组件无新值传出', async () => {
@@ -77,34 +77,35 @@ describe('Select', () => {
        });
 
        it('点击组件，显示所有下拉选项，全部没有点亮，输入包含的值，正确过滤选项，点击选项，正确显示文案和icon， 并将新值传出', async () => {
-        await selectClick()
-        await setSelectVal('pi')
-        expect(getVisibleOptionsLength().length).to.be.equal(1)
+        await selectClick(wrapper)
+        await setSelectVal(wrapper, 'pi')
+        expect(getVisibleOptionsLength(wrapper).length).to.be.equal(1)
 
         const options = wrapper.findAll('.sp-select-list .sp-option').filter(item => item.element.style.display!== 'none')
-        options[0].element.click()
+        await options.wrappers[0].trigger('click')
 
         expect(wrapper.find('.sp-select-dropdown').isVisible()).to.be.false
         expect(wrapper.vm.$children[1].inputText).to.be.equal('pig')
         expect(wrapper.vm.val).to.be.equal(3)
+        debugger
         expect(wrapper.vm.icon).to.be.equal('sp-icon-search')
         expect(wrapper.find('.sp-select__prepend').isVisible()).to.be.true
        });
 
        it('点击组件，显示所有下拉选项，全部没有点亮，输入包含的值，正确过滤选项，点击选项，正确显示文案和icon， 并将新值传出，再点击显示所有的选项，并且请选择的地址显示已选的文案，滚动和点亮已选项', async () => {
         await selectClick()
-        expect(getVisibleOptionsLength().length).to.be.equal(5)
+        expect(getVisibleOptionsLength(wrapper).length).to.be.equal(5)
         expect(wrapper.vm.$children[1].inputText).to.be.equal('')
         expect(wrapper.find('.sp-select__prepend').isVisible()).to.be.false
         expect(wrapper.find('.sp-select-list .is--selected').exists()).to.be.true
        });
 
        it('点击组件，显示所有下拉选项，全部没有点亮，输入完全符合的值，点击其他地方，下拉框隐藏，还是显示请选择，无新值传出', async () => {
-        await clearSelect()
-        await selectClick()
-        expect(getVisibleOptionsLength().length).to.be.equal(5)
-        await setSelectVal('pig')
-        await handelOtherClick()
+        await clearSelect(wrapper)
+        await selectClick(wrapper)
+        expect(getVisibleOptionsLength(wrapper).length).to.be.equal(5)
+        await setSelectVal(wrapper, 'pig')
+        await handelOtherClick(wrapper)
 
         expect(wrapper.find('.sp-select-dropdown').isVisible()).to.be.false
         expect(wrapper.vm.val).to.be.equal('')
@@ -115,15 +116,15 @@ describe('Select', () => {
     describe('默认无值-键盘操作', () => {
       const select = wrapper.vm.$children[1];
       it('直接使用键盘向上/向下，显示所有下拉选项，全部没有点亮', async () => {
-        await clearSelect()
+        await clearSelect(wrapper)
         await select.navigateOptions('next')
         expect(wrapper.find('.sp-select-dropdown').isVisible()).to.be.true
-        expect(getVisibleOptionsLength().length).to.be.equal(5) 
+        expect(getVisibleOptionsLength(wrapper).length).to.be.equal(5) 
         expect(wrapper.find('.sp-select-list .is--selected').exists()).to.be.false
       });
 
       it('直接使用键盘向上/向下，显示所有下拉选项，全部没有点亮，输入包含的值，正确过滤数据，使用键盘移动，并选择一个选项, 下拉框关闭，正确显示正常的文案和icon, 并将新值传出， 再次使用键盘向上/向下，显示所有下拉选项，并且请选择的地址显示已选的文案，滚动和点亮已选项', async () => {
-        await setSelectVal('pi')
+        await setSelectVal(wrapper, 'pi')
         await select.navigateOptions('next')
         select.handleInputEnter()
 
@@ -135,7 +136,7 @@ describe('Select', () => {
 
         await select.navigateOptions('next')
         expect(wrapper.find('.sp-select-dropdown').isVisible()).to.be.true
-        expect(getVisibleOptionsLength().length).to.be.equal(5) 
+        expect(getVisibleOptionsLength(wrapper).length).to.be.equal(5) 
         expect(wrapper.find('.sp-select-list .is--selected').exists()).to.be.true
       });
     })
@@ -143,22 +144,22 @@ describe('Select', () => {
     describe('默认有值-点选', () => {
       it('点击组件，显示所有下拉选项，滚动并点亮已选项，输入异常的值，显示无匹配数据，再点击其他地方，正常显示之前的已选项和icon，并隐藏下拉框，组件无新值传出', async () => {
         await wrapper.setData({ val: 3})
-        await selectClick()
+        await selectClick(wrapper)
         expect(wrapper.find('.sp-select-dropdown').isVisible()).to.be.true
-        expect(getVisibleOptionsLength().length).to.be.equal(5)
+        expect(getVisibleOptionsLength(wrapper).length).to.be.equal(5)
         expect(wrapper.find('.sp-select-list .is--selected').exists()).to.be.true
         
-        await setSelectVal('uij')
-        await handelOtherClick()
+        await setSelectVal(wrapper, 'uij')
+        await handelOtherClick(wrapper)
         expect(wrapper.find('.sp-select-dropdown').isVisible()).to.be.false
         expect(wrapper.vm.val).to.be.equal(3)
       })
 
       it('点击组件，显示所有下拉选项，滚动并点亮已选项，输入包含的值，正确过滤选项，点击选项，正确显示文案和icon， 并将新值传出，再点击显示所有的选项，并且请选择的地址显示已选的文案，滚动和点亮已选项', async () => {
-        await selectClick()
-        await setSelectVal('dog')
+        await selectClick(wrapper)
+        await setSelectVal(wrapper, 'dog')
         const options = wrapper.findAll('.sp-select-list .sp-option').filter(item => item.element.style.display!== 'none')
-        options[0].element.click()
+        options.wrappers[0].element.click()
 
         expect(wrapper.find('.sp-select-dropdown').isVisible()).to.be.false
         expect(wrapper.vm.$children[1].inputText).to.be.equal('dog')
@@ -172,8 +173,8 @@ describe('Select', () => {
       const select = wrapper.vm.$children[1];
       it('直接使用键盘向上/向下，显示所有下拉选项，滚动并点亮已选项，输入包含的值，正确过滤数据，使用键盘移动，并选择一个选项, 下拉框关闭，正确显示正常的文案和icon, 并将新值传出， 再次使用键盘向上/向下，显示所有下拉选项，并且请选择的地址显示已选的文案，滚动和点亮已选项', async () => {
         await wrapper.setData({ val: 3})
-        await selectClick()
-        await setSelectVal('pig')
+        await selectClick(wrapper)
+        await setSelectVal(wrapper, 'pig')
 
         await select.navigateOptions('next')
         select.handleInputEnter()
