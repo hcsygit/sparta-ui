@@ -215,6 +215,7 @@ export default {
       currentValue: this.value,
       oldInputText: null,
       isOnComposition: false,
+      singleSelected: ''
     }
   },
 
@@ -266,6 +267,7 @@ export default {
     // 监控下拉是否显示
     visible(val) {
       if (val) {
+        this.singleSelected = ''
         if (this.currentValue !== '') {
           this.$nextTick(() => this.scrollToView())
         }
@@ -275,9 +277,14 @@ export default {
         // 如果filterable开启了，用户输入的值在options中不存在的话，清空
         if (this.filterable) {
           // 清空
+          this.inputText = ''
           if (this.oldInputText) {
             this.inputText = this.oldInputText
           }
+          if (this.singleSelected) {
+            this.inputText = this.singleSelected
+          }
+          this.filterOptionsVisible()
         }
         this.broadcast('SpSelectDropdown', 'destroyPopper')
       }
@@ -293,7 +300,7 @@ export default {
     },
     inputText() {
       // 如果filterable开启，并且focus，根据用户输入过滤（搜索）相关的条目
-      if (this.filterable && this.isFocus) {
+      if (this.filterable) {
         this.filterOptionsVisible()
         // 为了每次弹出dropdown，都会根据处的环境做适应
         this.broadcast('SpSelectDropdown', 'updatePopper')
@@ -306,11 +313,6 @@ export default {
       if (this.filterable) {
         if (!val) {
           this.oldInputText = null
-
-          if (!this.hasLabelInOptions()) {
-            this.inputText = ''
-            this.filterOptionsVisible()
-          }
         }
       }
     },
@@ -447,6 +449,7 @@ export default {
         }
       } else if (hoverItem) {
         if(this.filterable) {
+          this.singleSelected = hoverItem.label
           this.oldInputText = hoverItem.label
         }
 
