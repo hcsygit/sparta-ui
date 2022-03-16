@@ -14,8 +14,13 @@
   <div class="sp-upload-demo">
     <sp-upload
       action="/api/upload"
+      accept=".png"
       :process-result="processResult"
+      :before-upload="handleBeforeUpload"
+      :on-progress="handleOnProgress"
+      :on-error="handleOnError"
       @change="handleChange"
+      :on-exceed="handleOnExceed"
     ></sp-upload>
   </div>
 </template>
@@ -327,6 +332,23 @@ export default{
         pass: response.status == 200,
         errMsg: response.message
       }
+    },
+    handleBeforeUpload(file) {
+      console.log('beforeUpload', file)
+    },
+    handleOnProgress(event, file, fileList) {
+      console.log('handleOnProgress-event', event)
+      console.log('handleOnProgress-file', file)
+      console.log('handleOnProgress-fileList', fileList)
+    },
+    handleOnError(err, file, fileList) {
+      console.log('handleOnError-err', err)
+      console.log('handleOnError-file', file)
+      console.log('handleOnError-fileList', fileList)
+    },
+    handleOnExceed(files, fileList) {
+      console.log('handleOnExceed-files', files)
+      console.log('handleOnExceed-fileList', fileList)
     }
   }
 }
