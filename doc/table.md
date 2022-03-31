@@ -106,6 +106,7 @@ export default{
           width="200" 
           theme="blue"
           has-border
+          scroll-bind-element=".components--main.markdown-body"
         >
           <i class="sp-icon-ques"></i>
           <template slot="popup">
@@ -731,6 +732,20 @@ export default{
         label="提现中的金额"
         :formatter="formatter"
         width="200">
+        <template slot-scope="scope">
+          {{ scope.row.withdrawing }}
+          <sp-popup-tip
+              width="200" color="#747d8c"
+              has-border
+              theme="blue"
+              :scroll-bind-element="scrollBindElement"
+            >
+              <i class="sp-icon-ques"></i>
+              <template slot="popup">
+                我是做好事不留名的红领巾我是做好事不我是做好事不留名的红领巾我是做好事不留名的红领巾我是做好事不留名的红领巾我是做好事不留名的红领巾我是做好事不留名的红领巾我是做好事不留名的红领巾我是做好事不留名的红领巾我是做好事不留名的红领巾我是做好事不留名的红领巾我是做好事不留名的红领巾我是做好事不留名的红领巾我是
+              </template>
+          </sp-popup-tip>
+        </template>
       </sp-table-column>
       <sp-table-column
         prop="tag"
@@ -930,6 +945,7 @@ export default{
 export default{
   data() {
     return {
+      scrollBindElement: '',
       tableList1: [
         {
           name: '番茄炒西红柿',
@@ -974,6 +990,9 @@ export default{
       loading2: false,
       showTableColumn: true
     }
+  },
+  mounted() {
+    this.scrollBindElement = document.querySelector('.components--main.markdown-body')
   },
   methods: {
     formatter(cell) {

@@ -10,6 +10,7 @@
     <sp-popup-tip
       width="200" color="#747d8c"
       has-border
+      theme="blue"
     >
       <i class="sp-icon-ques"></i>
       <template slot="popup">
@@ -28,6 +29,7 @@
 | theme | 设置浮层的主题 | string | 'white'/'blue' | 'white' |
 | color | 设置浮层的字体颜色 | string | — | '#012257' |
 | hasBorder | 设置浮层是否有边框 | boolean | — | false |
+| scrollBindElement | 设置scroll事件监听的元素 | string/Element | — | - |
 
 ### Slot
 | name | 说明 |
