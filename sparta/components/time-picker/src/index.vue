@@ -17,6 +17,7 @@
       ref="sp-time-picker__dropdown"
       v-model="visible"
       class="sp-time-picker__dropdown"
+      :scroll-bind-element="scrollBindElement"
     >
       <transition name="sp-zoom-in-top">
         <div
@@ -117,7 +118,8 @@ export default {
     disableSecond: {
       type: Function,
       default: () => []
-    }
+    },
+    scrollBindElement: {}
   },
 
   data() {
