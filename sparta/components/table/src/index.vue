@@ -538,16 +538,6 @@ export default {
       overflow: hidden;
     }
   }
-  &.is--no-footer {
-    .sp-table__body {
-      tr {
-        &:last-child {
-          border-bottom: none;
-        }
-      }
-    }
-  }
-
   &__footer {
     position: relative;
     height: 84px;
