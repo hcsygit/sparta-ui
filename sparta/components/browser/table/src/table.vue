@@ -64,12 +64,19 @@
         </colgroup>
         <tbody>
           <tr
-            v-for="(item, rIndex) in list"
+            v-for="(item, rIndex) in tableList"
             :key="rIndex"
-            :class="{ 'is--striped': rIndex%2 !== 0 }"
+            :class="[
+              {
+                'is--striped': rIndex%2 !== 0,
+                'is--expand': isExpand(item[rowKey]),
+              },
+              `sparta-table-row-level-${item.level}`
+            ]"
           >
             <td v-if="selection">
               <div class="sp-table-cell">
+                <i v-if="isTreeTable">*</i>
                 <sp-checkbox
                   v-if="checkedList[rIndex]"
                   v-model="checkedList[rIndex].isChecked"
@@ -189,6 +196,21 @@ function scalarArrayEquals(array1, array2) {
   return array1.length === array2.length && array1.every(function(v,i) { return v === array2[i]})
 }
 
+
+function flattenItem(list, item, childrenKey, rowKey, level) {
+  item[childrenKey].forEach(v => {
+    list.push({
+      ...v,
+      level,
+      parentId: item[rowKey]
+    })
+    if(v[childrenKey]?.length) {
+      flattenItem(list, v, childrenKey, rowKey, level+1)
+    }
+  })
+  return list
+}
+
 export default {
   name: 'SpTable',
 
@@ -258,6 +280,27 @@ export default {
       type: Boolean,
       default: false
     },
+    rowKey: { // 行数据的 Key，用来优化 Table 的渲染；显示树形数据时该属性是必填的
+      type: [String, Function],
+      default: 'id'
+    },
+    expandRowKeys: { // 可以通过该属性设置 Table 目前的展开行，需要设置 row-key 属性才能使用，该属性为展开行的 keys 数组。
+      type: Array,
+      default: () => []
+    },
+    defaultExpandAll: { // 是否默认展开所有行，当 Table 包含展开行存在或者为树形表格时有效
+      type: Boolean,
+      default: false
+    },
+    treeProps: { // 渲染嵌套数据的配置选项
+      type: Object,
+      default() {
+        return {
+          hasChildren: false,
+          children: 'children'
+        }
+      }
+    }
   },
 
   data() {
@@ -268,7 +311,8 @@ export default {
       tableWidth: '100%',
       showVScroll: false,
       children: [],
-      tableKey: 0
+      tableKey: 0,
+      expandedIdList: [], // 展开的行数据
     }
   },
 
@@ -299,6 +343,23 @@ export default {
     },
     hasData() {
       return this.list && this.list.length
+    },
+    isTreeTable() {
+      return this.treeProps.hasChildren
+    },
+    tableList() {
+      let list = []
+      this.list.forEach(item => {
+        list.push({
+          ...item,
+          level: 0
+        })
+        if (this.isTreeTable && item[this.treeProps.children]?.length) {
+          list.push(...flattenItem([],item, this.treeProps.children, this.rowKey, 1))
+        }
+      })
+
+      return list
     }
   },
 
@@ -471,7 +532,33 @@ export default {
       if(this.disabled) return true
       if(typeof this.selectable === 'function') return !this.selectable(row, index)
       return false
+    },
+
+    isExpand(id) {
+      return this.expandedIdList.includes(id)
+    },
+
+    isSub(v) {
+      return v?.parentId
+    },
+
+    hasSub(v) {
+      return v?.itemAmount
+    },
+
+    handleExpand(id) {
+      const index = this.expandedIdList.findIndex(item => item === id)
+      if(index === -1) {
+        this.expandedIdList.push(id)
+      } else {
+        this.expandedIdList.splice(index, 1)
+      }
+    },
+
+    getRowClassName(item) {
+      return `sparta-table-row-level-${item.level}`
     }
+    
   },
 }
 </script>

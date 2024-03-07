@@ -2,6 +2,141 @@
 
 用于展示批量数据
 
+### 带选择框的树形表格
+
+:::demo 当`sp-table`元素中注入`list`对象数组后，在`sp-table-column`中用`prop`属性来对应对象中的键名即可填入数据，用`label`属性来定义表格的列名。<br>可以使用`width`属性来定义列宽。通过`template`自定义单元格内容，用`scope`单元格对应的值。
+```vue
+<template>
+  <sp-table
+    :list="tableTreeList"
+    rowKey="id"
+    :tree-props="{ children: 'childList', hasChildren: true }"
+    selection
+    @selection-change="handleSelectionChange"
+  >
+    <sp-table-column
+      :ellipsis="true"
+      prop="name"
+      label="部门名称"
+      width="200">
+    </sp-table-column>
+    <sp-table-column
+      prop="number"
+      label="部门人数"
+      width="200">
+    </sp-table-column>
+    <sp-table-column
+      prop="userName"
+      label="部门负责人"
+      width="200">
+    </sp-table-column>
+    <sp-table-column
+      prop="groupName"
+      label="部门群名称"
+      width="200">
+    </sp-table-column>
+    <sp-table-column
+      prop="groupUserName"
+      label="部门群群主"
+      :formatter="formatter"
+      width="200">
+    </sp-table-column>
+  </sp-table>
+</template>
+
+
+<script>
+export default{
+  data() {
+    return {
+      tableTreeList: [
+        {
+          id: 1,
+          name: 'UE设计',
+          number: '7',
+          userName: '',
+          groupName: 'UE设计',
+          groupUserName: 'wang wu'
+        },
+        {
+          id: 2,
+          name: 'UI设计',
+          number: '10',
+          userName: '',
+          groupName: 'UI设计',
+          groupUserName: 'wang wu',
+          childList: [
+            {
+              id: 21,
+              name: 'C端UI',
+              number: '2',
+              userName: '',
+              groupName: 'C端UI',
+              groupUserName: 'wang wu',
+            },
+            {
+              id: 22,
+              name: 'B端UI',
+              number: '3',
+              userName: '',
+              groupName: 'B端UI',
+              groupUserName: 'wang wu',
+              childList: [
+                {
+                  id: 221,
+                  name: 'home',
+                  number: '5',
+                  userName: '',
+                  groupName: 'home',
+                  groupUserName: 'wang wu',
+                  childList: [
+                    {
+                      id: 2211,
+                      name: '设计师',
+                      number: '16',
+                      userName: '',
+                      groupName: '设计师',
+                      groupUserName: 'wang wu',
+                      childList: [
+                        {
+                          id: 22111,
+                          name: '家装设计师',
+                          number: '2',
+                          userName: '',
+                          groupName: '家装设计师',
+                          groupUserName: 'wang wu',
+                          childList: [
+                            {
+                              id: 221111,
+                              name: '软装设计师',
+                              number: '1',
+                              userName: '',
+                              groupName: '软装设计师',
+                              groupUserName: 'wang wu',
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+      ]
+    }
+  },
+  methods: {
+    formatter(cell) {
+      return cell + '元'
+    }
+  }
+}
+</script>
+```
+:::
+
 ### 基本用法
 
 :::demo 当`sp-table`元素中注入`list`对象数组后，在`sp-table-column`中用`prop`属性来对应对象中的键名即可填入数据，用`label`属性来定义表格的列名。<br>可以使用`width`属性来定义列宽。通过`template`自定义单元格内容，用`scope`单元格对应的值。
@@ -1127,6 +1262,82 @@ export default{
           tag: 'yo',
           amount: ''
         }
+      ],
+      tableTreeList: [
+        {
+          id: 1,
+          name: 'UE设计',
+          number: '7',
+          userName: '',
+          groupName: 'UE设计',
+          groupUserName: 'wang wu'
+        },
+        {
+          id: 2,
+          name: 'UI设计',
+          number: '10',
+          userName: '',
+          groupName: 'UI设计',
+          groupUserName: 'wang wu',
+          childList: [
+            {
+              id: 21,
+              name: 'C端UI',
+              number: '2',
+              userName: '',
+              groupName: 'C端UI',
+              groupUserName: 'wang wu',
+            },
+            {
+              id: 22,
+              name: 'B端UI',
+              number: '3',
+              userName: '',
+              groupName: 'B端UI',
+              groupUserName: 'wang wu',
+              childList: [
+                {
+                  id: 221,
+                  name: 'home',
+                  number: '5',
+                  userName: '',
+                  groupName: 'home',
+                  groupUserName: 'wang wu',
+                  childList: [
+                    {
+                      id: 2211,
+                      name: '设计师',
+                      number: '16',
+                      userName: '',
+                      groupName: '设计师',
+                      groupUserName: 'wang wu',
+                      childList: [
+                        {
+                          id: 22111,
+                          name: '家装设计师',
+                          number: '2',
+                          userName: '',
+                          groupName: '家装设计师',
+                          groupUserName: 'wang wu',
+                          childList: [
+                            {
+                              id: 221111,
+                              name: '软装设计师',
+                              number: '1',
+                              userName: '',
+                              groupName: '软装设计师',
+                              groupUserName: 'wang wu',
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
       ],
       loading: false,
       loading2: false,
