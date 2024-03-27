@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<head></head>
+<body>
+  <h1>My First Heading</h1>
+  <p>My first paragraph.</p>
+  <script>
+    var list = [
+      {
+        id: 1,
+        name: "王小虎",
+        children: [
+          {
+            id: 11,
+            name: "王小虎儿子11",
+            children: [
+              {
+                id: 111,
+                name: "王小虎孙子111"
+              }
+            ]
+          },
+          {
+            id: 12,
+            name: "王小虎儿子12"
+          }
+        ]
+      },
+      {
+        id: 2,
+        name: "赵大牛",
+        children: [
+          {
+            id: 21,
+            name: "赵大牛儿子21",
+            children: [
+              {
+                id: 211,
+                name: "赵大牛孙子211"
+              }
+            ]
+          },
+          {
+            id: 22,
+            name: "赵大牛儿子22"
+          }
+        ]
+      }
+    ];
+
+    function flattenItem(item, childrenKey, rowKey, level) {
+      console.log('flattenItem', item)
+      var _list = [];
+      item[childrenKey].forEach(v => {
+        _list.push({
+          ...v,
+          children: undefined,
+          level,
+          parentId: item[rowKey]
+        });
+        if (v[childrenKey]?.length) {
+          console.log(v.name)
+          _list.push(...flattenItem(v, childrenKey, rowKey, level+1));
+        } else {
+          console.error(v)
+        }
+      });
+      return _list;
+    }
+
+    var objList = [];
+
+    list.forEach(item => {
+      objList.push({
+        ...item,
+        children: undefined
+      });
+      if (item.children?.length) {
+        objList = objList.concat(flattenItem(item, "children", "id", 1));
+      }
+    });
+
+    console.log(objList)
+
+    function isDomainListValidatePassed() {
+      let validateResult = ''; // Y: 通过 N: 不通过 '': 未知
+      // let timer = null
+      // clearTimeout(timer)
+
+      setTimeout(() => { 
+        // 模拟请求
+        validateResult = 'Y'
+        console.log('模拟请求结束', validateResult)
+      }, 1000*3)
+
+      // timer = setTimeout(() => {
+       
+      //   validateResult = 'N'
+      //   console.log('请求超时', validateResult)
+      // }, 1000 * 5) // 定义最长时间，如果两秒后还没有结果，则返回false
+
+      const startTime = Date.now();
+      while (!validateResult && Date.now() - startTime < 2000) {
+        // 最长等待两秒
+      }
+
+      return validateResult === 'Y';
+    }
+  </script>
+</body>

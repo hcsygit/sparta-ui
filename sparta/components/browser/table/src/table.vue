@@ -70,17 +70,18 @@
               {
                 'is--striped': rIndex%2 !== 0,
                 'is--expand': isExpand(item[rowKey]),
+                'is--hide': isHide(item, rIndex)
               },
               `sparta-table-row-level-${item.level}`
             ]"
           >
             <td v-if="selection">
               <div class="sp-table-cell">
-                <i v-if="isTreeTable">*</i>
                 <sp-checkbox
                   v-if="checkedList[rIndex]"
                   v-model="checkedList[rIndex].isChecked"
                   :disabled="isSelectDisable(item, rIndex)"
+                  :indeterminate="isIndeterminateState(item)"
                   @change="handleCheck(rIndex, $event)"
                 />
               </div>
@@ -92,10 +93,19 @@
               <sp-table-cell
                 :key="cIndex + tableKey"
                 :column="tdItem"
-                :list="list"
+                :list="tableList"
                 :c-index="cIndex"
                 :r-index="rIndex"
-              ></sp-table-cell>
+                :level="item.level"
+              >
+                <i
+                  v-if="isTreeTable && cIndex === 0 && hasSub(item)"
+                  slot="pre"
+                  class="sp-icon-caret-right sp-icon-arrow-right sp-table__expand-ico"
+                  :class="{ 'is--expand': isExpand(item[rowKey]) }"
+                  @click="handleRowExpand(item, rIndex, rowKey)"
+                />
+              </sp-table-cell>
             </td>
           </tr>
         </tbody>
@@ -185,38 +195,20 @@
 
 <script>
 import SpCheckbox from '../../checkbox'
-
-/**
- * 判断两个一维数据是否相等
- * @param {*} array1
- * @param {*} array2
- * @returns
- */
-function scalarArrayEquals(array1, array2) {
-  return array1.length === array2.length && array1.every(function(v,i) { return v === array2[i]})
-}
+import BasicTable from './mixins/basic'
+import TreeTable from './mixins/treeTable'
 
 
-function flattenItem(list, item, childrenKey, rowKey, level) {
-  item[childrenKey].forEach(v => {
-    list.push({
-      ...v,
-      level,
-      parentId: item[rowKey]
-    })
-    if(v[childrenKey]?.length) {
-      flattenItem(list, v, childrenKey, rowKey, level+1)
-    }
-  })
-  return list
-}
+// import { importMixins } from './mixins/index'
 
 export default {
   name: 'SpTable',
-
+  
   components: {
     SpCheckbox
   },
+
+  mixins: [BasicTable], // 顺序不可变，BasicTable在最前
 
   props: {
     list: {
@@ -280,6 +272,7 @@ export default {
       type: Boolean,
       default: false
     },
+    /* 树形tale props */
     rowKey: { // 行数据的 Key，用来优化 Table 的渲染；显示树形数据时该属性是必填的
       type: [String, Function],
       default: 'id'
@@ -300,270 +293,25 @@ export default {
           children: 'children'
         }
       }
-    }
-  },
-
-  data() {
-    return {
-      checkAll: false,
-      isIndeterminate: false,
-      checkedList: [],
-      tableWidth: '100%',
-      showVScroll: false,
-      children: [],
-      tableKey: 0,
-      expandedIdList: [], // 展开的行数据
-    }
+    },
   },
 
   computed: {
-    isIE9() {
-      return navigator.appVersion.indexOf('MSIE 9.0') > -1
-    },
-    paginationPerPages() {
-      return this.paginationOption && this.paginationOption.perPages || 7
-    },
-    paginationPageIndex() {
-      return this.paginationOption && this.paginationOption.queryPageNo || 1
-    },
-    paginationPageSize() {
-      return this.paginationOption && this.paginationOption.pageSize || 10
-    },
-    paginationTotal() {
-      return this.paginationOption && this.paginationOption.totalSize || 1
-    },
-    paginationAlign() {
-      return this.paginationOption && this.paginationOption.align || 'middle'
-    },
-    hasFooter() {
-      return (this.selection && this.showAllSelect)
-        || this.pagination
-        || this.$slots.footerRightContent
-        || this.$slots.footerLeftContent
-    },
-    hasData() {
-      return this.list && this.list.length
-    },
     isTreeTable() {
       return this.treeProps.hasChildren
     },
-    tableList() {
-      let list = []
-      this.list.forEach(item => {
-        list.push({
-          ...item,
-          level: 0
-        })
-        if (this.isTreeTable && item[this.treeProps.children]?.length) {
-          list.push(...flattenItem([],item, this.treeProps.children, this.rowKey, 1))
-        }
-      })
-
-      return list
-    }
   },
 
-  watch: {
-    list() {
-      // 数据变化后清除所有点亮状态
-      this.checkAll = false
-      this.isIndeterminate = false
-      this.checkedList = []
-      this._initCheckedList()
-      this._emitChange()
-
-      this.tableKey = + new Date()
-    }
-  },
-  
-  created() {
-    this.init()
-  },
-
-  mounted() {
-    if (this.selection) {
-      this._initCheckedList()
-    }
-    this._initTableWidth()
-  },
-
-  beforeUpdate() {
-    this.enableUpdate && this.init()
-  },
-  
-  methods: {
-    init() {
-      this.children = this.$slots.default.filter(item => {
-        return /SpTableColumn/.test(item.tag)
-      })
-    },
-    clearSelection() {
-      if(this.disabled) return
-      this.checkAll = false
-      this._setCheckState(false)
-    },
-    toggleAllSelection() {
-      if(this.disabled) return
-      this.checkAll = !this.checkAll
-      this._setCheckState(this.checkAll)
-    },
-    toggleRowSelection(index, selected) {
-      if(!this.disabled && typeof index === 'number' && typeof selected === 'boolean') {
-        this.handleCheck(index, selected)
-      }
-    },
-    _initTableWidth() {
-      let width = 0
-      for (let i = 0, len = this.children.length; i < len; i++) {
-        const w = this.children[i].componentOptions.propsData.width
-        if (w) {
-          width += +w
-        }
-      }
-      // 如果width大于容器宽度，则使用累加的w来处理table;
-      // 否则table 100%
-      const parentW = parseInt(window.getComputedStyle(this.$el).width)
-      if (this.selection) {
-        width += +this.selectionWidth
-      }
-      if (width <= parentW) {
-        width = '100%'
-        this.showVScroll = false
-      } else {
-        this.showVScroll = true
-      }
-      this.tableWidth = width + 'px'
-    },
-
-    _initCheckedList() {
-      let len = this.list.length
-      while(len) {
-        len--
-        this.$set(this.checkedList, len, {
-          isChecked: false,
-          disabled: this.isSelectDisable(this.list[len], len)
-        })
-      }
-    },
-
-    _emitChange() {
-      // 过滤出打勾了的值给上层
-      const result = []
-      const isCheckedIndexList = []
-      this.checkedList.forEach((item, index) => {
-        if (item.isChecked) {
-          isCheckedIndexList.push(index)
-          result.push(this.list[index])
-        }
-      })
-      if(!scalarArrayEquals(isCheckedIndexList, this.oldIsCheckedIndexList || [])) {
-        // 只有值改变了才透出
-        this.oldIsCheckedIndexList = isCheckedIndexList
-        this.$emit('selection-change', result)
-      }
-    },
-
-    /**
-     * 处理checkbox的关联
-     */
-    _processCheckBoxRelation() {
-      const checkedAccount = this.checkedList.filter(item => {
-        return item.isChecked
-      }).length
-      if (checkedAccount === this.list.length) {
-        this.checkAll = true
-        this.isIndeterminate = false
-      } else if (0 < checkedAccount && checkedAccount < this.list.length) {
-        this.isIndeterminate = true
-        this.checkAll = false
-      } else {
-        this.isIndeterminate = false
-        this.checkAll = false
-      }
-    },
-    _setCheckState(checkState) {
-      let len = this.list.length
-      let isEmitChange = false
-      while(len) {
-        len--
-        if(!this.checkedList[len].disabled) {
-          isEmitChange = true
-          this.$set(this.checkedList, len, {
-            disabled: this.checkedList[len].disabled,
-            isChecked: checkState
-          })
-        }
-      }
-      if(isEmitChange) {
-        this.isIndeterminate = false
-        this._emitChange()
-      }
-    },
-    /**
-     * 全选单选框点击
-     */
-    handleCheckAllChange(isChecked) {
-      this._setCheckState(isChecked)
-    },
-    /**
-     * 单选框单独点击
-     */
-    handleCheck(index, isChecked) {
-      // 更新checkedList
-      if(!this.checkedList[index].disabled) {
-        this.$set(this.checkedList, index, {
-          disabled: this.checkedList[index].disabled,
-          isChecked
-        })
-        this._processCheckBoxRelation()
-        this._emitChange()
-      }
-    },
-
-    handlePageChange(index, pageSize) {
-      this.$emit('pagination-change', index, pageSize)
-    },
-
-    handleViewMore() {
-      this.$emit('table-view-more')
-    },
-
-    isSelectDisable(row, index) {
-      if(this.disabled) return true
-      if(typeof this.selectable === 'function') return !this.selectable(row, index)
-      return false
-    },
-
-    isExpand(id) {
-      return this.expandedIdList.includes(id)
-    },
-
-    isSub(v) {
-      return v?.parentId
-    },
-
-    hasSub(v) {
-      return v?.itemAmount
-    },
-
-    handleExpand(id) {
-      const index = this.expandedIdList.findIndex(item => item === id)
-      if(index === -1) {
-        this.expandedIdList.push(id)
-      } else {
-        this.expandedIdList.splice(index, 1)
-      }
-    },
-
-    getRowClassName(item) {
-      return `sparta-table-row-level-${item.level}`
-    }
-    
-  },
+  beforeCreate() {
+    console.log(this.$options.mixins)
+    this.$options.mixins.push(TreeTable)
+  }
 }
 </script>
 
 <style lang="scss">
+@import "./style/treeTable";
+
 .sp-table {
   table {
     table-layout: fixed;
@@ -635,7 +383,7 @@ export default {
         }
 
         .sp-checkbox__wrap {
-          display: block;
+          display: inline-block;
           height: 14px;
           line-height: 15px;
           .sp-checkbox {
@@ -649,6 +397,12 @@ export default {
       text-overflow: ellipsis;
       overflow: hidden;
     }
+  }
+
+  &__expand-ico {
+    color: red;
+    display: inline-block;
+    cursor: pointer;
   }
 
   &__footer {

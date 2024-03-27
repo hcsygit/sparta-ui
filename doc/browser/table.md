@@ -7,11 +7,12 @@
 :::demo 当`sp-table`元素中注入`list`对象数组后，在`sp-table-column`中用`prop`属性来对应对象中的键名即可填入数据，用`label`属性来定义表格的列名。<br>可以使用`width`属性来定义列宽。通过`template`自定义单元格内容，用`scope`单元格对应的值。
 ```vue
 <template>
-  <sp-table
+  <sp-tree-table
     :list="tableTreeList"
     rowKey="id"
     :tree-props="{ children: 'childList', hasChildren: true }"
     selection
+    ref="treeTable"
     @selection-change="handleSelectionChange"
   >
     <sp-table-column
@@ -41,7 +42,7 @@
       :formatter="formatter"
       width="200">
     </sp-table-column>
-  </sp-table>
+  </sp-tree-table>
 </template>
 
 
@@ -108,7 +109,7 @@ export default{
                           childList: [
                             {
                               id: 221111,
-                              name: '软装设计师',
+                              name: '软装设计师软装设计师',
                               number: '1',
                               userName: '',
                               groupName: '软装设计师',
@@ -1195,6 +1196,7 @@ export default{
 | clearSelection      | 用于多选表格，清空用户的选择    | —      |
 | toggleAllSelection      | 用于多选表格，切换所有行的选中状态    | —      |
 | toggleRowSelection | 用于多选表格，切换某一行的选中状态，如果使用了第二个参数，则是设置这一行选中与否（selected 为 true 则选中）    | index(数组下标,从0开始),selected   |
+| toggleRowSelectionList | 用于多选表格，切换多行的选中状态，如果使用了第二个参数，则是设置这一行选中与否（selected 为 true 则选中）    | index(数组下标,从0开始),selected   |
 
 
 ### Table-column Attributes
@@ -1322,7 +1324,7 @@ export default{
                           childList: [
                             {
                               id: 221111,
-                              name: '软装设计师',
+                              name: '软装设计师软装设计师',
                               number: '1',
                               userName: '',
                               groupName: '软装设计师',
@@ -1346,6 +1348,7 @@ export default{
   },
   mounted() {
     this.popperScrollBindElem = document.querySelector('.components--main.markdown-body')
+    console.log(this.$refs.treeTable)
   },
   methods: {
     formatter(cell) {

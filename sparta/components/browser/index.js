@@ -44,6 +44,9 @@ import confirm from './confirm'
 import PasswordInput from './password-input'
 import PopupTip from './popup-tip'
 import TimeSelect from './time-select'
+import TreeTable from './treeTable'
+
+console.log('TreeTable》《index》《', TreeTable.name)
 
 const components = [
   Row,
@@ -87,12 +90,14 @@ const components = [
   Modal,
   PasswordInput,
   PopupTip,
-  TimeSelect
+  TimeSelect,
+  TreeTable
 ]
 
 let Sparta = {}
 Sparta.install = Vue => {
   components.forEach(component => {
+    console.warn('component>>>>', component.name, component)
     Vue.component(component.name, component)
     Sparta[component.name] = component.name
   })
@@ -157,5 +162,6 @@ export {
   PopupTip,
   ImgPreview,
   Toast,
-  TimeSelect
+  TimeSelect,
+  TreeTable
 }

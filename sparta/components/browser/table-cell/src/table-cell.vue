@@ -18,6 +18,10 @@ export default {
     cIndex: {
       type: Number,
       default: 0
+    },
+    level: {
+      type: Number,
+      default: 0
     }
   },
   render(h) {
@@ -52,13 +56,21 @@ export default {
     if (propsData.ellipsis) {
       cellClass += ' ellipsis'
     }
-    
+
+    const paddingLeft = this.cIndex === 0 ? this.level * 16 + 'px' : 0
+  
     // 渲染
     return h('div',
       {
-        class: cellClass
+        class: cellClass,
+        style: {
+          paddingLeft
+        }
       },
-      cellCopy
+      [
+        this.$slots.pre,
+        cellCopy
+      ]
     )
   }
 }

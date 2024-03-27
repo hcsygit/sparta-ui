@@ -1,0 +1,9 @@
+.sp-table {
+  &__body {
+    tr {
+      &.is--hide {
+        display: none;
+      }
+    }
+  }
+}
