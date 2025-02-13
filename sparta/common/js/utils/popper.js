@@ -1,6 +1,25 @@
 /* eslint-disable */
 /* 这是兼容IE9版本的popper.js */
+function getTransformScale(element) {
+  const style = window.getComputedStyle(element)
+  const transform = style.transform || style.webkitTransform || style.mozTransform
 
+
+  if (transform && transform !== 'none') {
+    const matrix = transform.match(/^matrix\((.+)\)$/)
+    if (matrix) {
+      const values = matrix[1].split(', ')
+      const scaleX = parseFloat(values[0])
+      const scaleY = parseFloat(values[3])
+      return { scaleX, scaleY }
+    }
+  }
+  return { scaleX: 1, scaleY: 1 } // 默认缩放比例为1
+}
+
+function zoomLevel() {
+  return getTransformScale(document.body).scaleX
+} 
 /**
  * @fileOverview Kickass library to create and place poppers near their reference elements.
  * @version {{version}}
@@ -1179,6 +1198,7 @@ function getOffsetRect(element) {
  */
 function getBoundingClientRect(element) {
   var rect = element.getBoundingClientRect();
+  // rect = rect / zoomLevel()
 
   // whether the IE version is lower than 11
   var isIE = navigator.userAgent.indexOf("MSIE") != -1;
@@ -1189,12 +1209,12 @@ function getBoundingClientRect(element) {
     rect.top;
 
   return {
-    left: rect.left,
-    top: rectTop,
-    right: rect.right,
-    bottom: rect.bottom,
-    width: rect.right - rect.left,
-    height: rect.bottom - rectTop
+    left: rect.left / zoomLevel(),
+    top: rectTop / zoomLevel(),
+    right: rect.right / zoomLevel(),
+    bottom: rect.bottom / zoomLevel(),
+    width: rect.right / zoomLevel() - rect.left / zoomLevel(),
+    height: rect.bottom / zoomLevel() - rectTop / zoomLevel()
   };
 }
 
